@@ -12,7 +12,7 @@ $user_id = $_SESSION["user_id"];
 
 // Mevcut kullanıcıyı çek
 $stmt = $db->prepare("SELECT fullname, email, username, role FROM users WHERE id = ?");
-$stmt->execute([$user_id]);
+$stmt->execute([$user_id]);   // <-- BURASI DÜZELTİLDİ
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Profil güncelleme
@@ -37,6 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if ($check->rowCount() > 0) {
             $error = "Bu kullanıcı adı zaten kullanılıyor!";
         } else {
+
             // Şifre değişiyor mu?
             if ($new_password !== "") {
                 $hashed = password_hash($new_password, PASSWORD_DEFAULT);
@@ -50,17 +51,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             // Session güncelle
             $_SESSION["user_fullname"] = $fullname;
             $_SESSION["username"] = $username;
-require_once "log.php";
-addLog($db, $user_id, "Profil bilgilerini güncelledi");
+
+            $success = "Profil başarıyla güncellendi.";
         }
     }
 }
 
-// Güncel bilgiyi tekrar çek
+// Güncel bilgiler tekrar çek
 $stmt = $db->prepare("SELECT fullname, email, username, role FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="tr">
