@@ -34,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
                 $role = "user"; // Varsayılan rol
 
-                // REGISTER INSERT (Admin paneli ile %100 uyumlu)
+                // REGISTER INSERT
                 $insert = $db->prepare("
                     INSERT INTO users (fullname, email, username, password, role)
                     VALUES (?, ?, ?, ?, ?)
@@ -49,7 +49,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 ]);
 
                 if ($result) {
-                    // İstersen otomatik login de yapabilirim
                     header("Location: login.php?msg=success");
                     exit();
                 } else {
@@ -102,16 +101,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     .form-control {
-        background-color: #0a192f;
+        background-color: #0a192f !important;
         border: 1px solid #233554;
-        color: white;
+        color: white !important;
         height: 48px;
     }
 
     .form-control:focus {
+        background-color: #0a192f !important;
+        color: #fff !important;
         border-color: #64ffda;
         box-shadow: 0 0 10px #64ffda55;
-        color: white;
+    }
+
+    /* Chrome autofill (beyaz arka plan) düzeltme */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus {
+        -webkit-box-shadow: 0 0 0 1000px #0a192f inset !important;
+        -webkit-text-fill-color: #fff !important;
+        transition: background-color 9999s ease-in-out 0s;
     }
 
     .btn-custom {
