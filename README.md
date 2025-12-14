@@ -249,15 +249,13 @@ Bu proje **Bartın(Bartın MYO) Üniversitesi - İnternet Tabanlı Programlama (
 **Admin Hesabı:**
 ```
 Kullanıcı: admin
-Şifre: Admin123!
-Email: admin@kyhaber.com
+Şifre: admin123
 ```
 
 **Editor Hesabı:**
 ```
 Kullanıcı: editor
-Şifre: Editor123!
-Email: editor@kyhaber.com
+Şifre: editor123
 ```
 
 ⚠️ **UYARI:** İlk girişten sonra şifreleri mutlaka değiştirin!
