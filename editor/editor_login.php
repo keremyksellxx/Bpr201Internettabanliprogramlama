@@ -1,7 +1,11 @@
 <?php
-session_start();
-require_once "../db.php"; // db.php ile PDO bağlantısı
+/**
+ * Editor Login Sayfası
+ * Session zaten includes/security.php tarafından başlatılıyor
+ */
 
+require_once "../db.php"; // db.php ile PDO bağlantısı
+// session_start(); // KALDIRILDI - security.php'de zaten var
 
 // Form gönderilmiş mi?
 if ($_SERVER["REQUEST_METHOD"] === "POST") {

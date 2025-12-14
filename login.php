@@ -2,11 +2,13 @@
 <html lang="tr">
 <head>
 <?php
-require_once "db.php";
+/**
+ * Kullanıcı Giriş Sayfası
+ * Session zaten includes/security.php tarafından başlatılıyor
+ */
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once "db.php";
+// Session kontrolü artık gerekli değil - security.php otomatik hallediyor
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 

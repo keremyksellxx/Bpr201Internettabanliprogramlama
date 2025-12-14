@@ -1,7 +1,11 @@
 <?php
-// yeni_haber.php  (veya bulunduğu dosya adı)
-session_start();
+/**
+ * Editor Panel - Haber Yönetimi
+ * Session zaten includes/security.php tarafından başlatılıyor
+ */
+
 require_once "../db.php";
+// session_start(); // KALDIRILDI - security.php'de zaten var
 
 // Rol kontrolü: editör girişi zorunlu
 if (!isset($_SESSION['editor_user']) || ($_SESSION['role'] ?? '') !== 'editor') {

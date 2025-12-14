@@ -2,10 +2,9 @@
 <html lang="tr">
 <head>
   <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-?>
+  // Session zaten includes/security.php tarafından başlatılıyor
+  // Bu sayfada db.php yüklenmediği için hiçbir işlem yok
+  ?>
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">

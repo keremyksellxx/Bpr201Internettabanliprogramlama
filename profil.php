@@ -1,6 +1,11 @@
 <?php
-session_start();
+/**
+ * Kullanıcı Profil Sayfası
+ * Session zaten includes/security.php tarafından başlatılıyor
+ */
+
 require_once "db.php";
+// session_start(); // KALDIRILDI - security.php'de zaten var
 
 // Giriş kontrol
 if (!isset($_SESSION["user_id"])) {

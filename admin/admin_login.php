@@ -1,6 +1,17 @@
 <?php
+/**
+ * Admin Login Sayfası
+ * 
+ * Admin kullanıcıları için giriş sayfası
+ * Session zaten includes/security.php tarafından başlatılıyor
+ * 
+ * @author BPRFINAL Team
+ */
+
 require_once "../db.php";
-session_start();
+
+// Session zaten security.php'de başlatıldı, tekrar başlatmaya gerek yok
+// session_start(); // KALDIRILDI - çift session hatasını önler
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
