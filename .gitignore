@@ -1,0 +1,160 @@
+# ========================================
+# KYHABER - GitIgnore Konfigürasyonu
+# Güvenlik ve Clean Code İçin
+# ========================================
+
+# ====================
+# Güvenlik - Kritik Dosyalar
+# ====================
+# Asla commit edilmemeli!
+/includes/config.php
+.env
+.env.local
+.env.production
+*.key
+*.pem
+*.p12
+
+# ====================
+# Logs - Hassas Bilgiler
+# ====================
+/logs/*.log
+/logs/*.txt
+/logs/security.log
+/logs/php_errors.log
+error_log
+debug.log
+
+# ====================
+# Uploads - Kullanıcı Dosyaları
+# ====================
+/uploads/*
+!/uploads/.gitkeep
+# Örnek resimler hariç
+!/uploads/sample/
+
+# ====================
+# Cache & Temporary
+# ====================
+/cache/*
+/tmp/*
+/temp/*
+*.cache
+*.tmp
+
+# ====================
+# Database Backups
+# ====================
+*.sql
+*.sql.gz
+*.sql.zip
+/backups/*
+!/backups/.gitkeep
+
+# ====================
+# IDE & Editor
+# ====================
+# Visual Studio Code
+.vscode/
+.vscode-test/
+*.code-workspace
+
+# PhpStorm / JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# NetBeans
+nbproject/
+build/
+nbbuild/
+dist/
+nbdist/
+
+# ====================
+# Operating System
+# ====================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.directory
+
+# ====================
+# Composer (PHP)
+# ====================
+/vendor/
+composer.phar
+composer.lock
+/vendor-bin/
+
+# ====================
+# Node.js (Eğer kullanılıyorsa)
+# ====================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ====================
+# Build & Dist
+# ====================
+/dist/
+/build/
+*.min.js
+*.min.css
+
+# ====================
+# Session Files
+# ====================
+/sessions/*
+*.sess
+
+# ====================
+# Development & Test
+# ====================
+/tests/coverage/
+/tests/output/
+phpunit.xml
+.phpunit.result.cache
+test-results/
+
+# ====================
+# Documentation (Generated)
+# ====================
+/docs/api/
+/docs/phpdoc/
+
+# ====================
+# Misc
+# ====================
+*.swp
+*.swo
+*.swn
+.htpasswd
+sftp-config.json
+
+# ====================
+# Production Specific
+# ====================
+# Production config dosyaları (örnek)
+/config/production/
+/config/secrets/

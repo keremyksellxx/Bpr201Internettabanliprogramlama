@@ -210,6 +210,369 @@ ALTER TABLE `kategoriler`
 --
 ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+-- ========================================================================
+-- GÜVENLİK İYİLEŞTİRMELERİ VE OPTİMİZASYON
+-- SQL Injection Önlemleri ve Performans Artırma
+-- @author BPRFINAL Team - Advanced Security Module
+-- @version 2.0
+-- ========================================================================
+
+-- ------------------------------------------------------------------------
+-- INDEXLER - Performans Optimizasyonu
+-- Sorgulama hızını artırır ve veritabanı performansını iyileştirir
+-- ------------------------------------------------------------------------
+
+-- Haberler tablosu için indexler
+ALTER TABLE `haberler` 
+ADD INDEX `idx_kategori` (`kategori`),           -- Kategoriye gore arama hızlandırma
+ADD INDEX `idx_editor_id` (`editor_id`),         -- Editor'e gore filtreleme optimizasyonu
+ADD INDEX `idx_created_at` (`created_at`),       -- Tarih sıralama performansı
+ADD INDEX `idx_baslik` (`baslik`(100));          -- Başlık aramalarında hızlanma
+
+-- Users tablosu için indexler
+ALTER TABLE `users`
+ADD INDEX `idx_role` (`role`),                   -- Role gore arama optimizasyonu
+ADD INDEX `idx_created_at` (`created_at`);       -- Kayıt tarihine gore sıralama
+
+-- Kategoriler tablosu için FULLTEXT index - gelışmış arama
+ALTER TABLE `kategoriler`
+ADD FULLTEXT INDEX `ft_kategori_adi` (`kategori_adi`);
+
+-- Haberler tablosu için FULLTEXT index - arama motoru optimizasyonu
+ALTER TABLE `haberler`
+ADD FULLTEXT INDEX `ft_baslik_icerik` (`baslik`, `icerik`);
+
+-- ------------------------------------------------------------------------
+-- STORED PROCEDURES - SQL Injection Koruması
+-- Hazır sorgular kullanarak SQL injection riskini azaltır
+-- Kod tekrarını önler ve bakımı kolaylaştırır
+-- ------------------------------------------------------------------------
+
+-- Procedure: Kullanıcı Girişi - Güvenli Login İşlemi
+DELIMITER $$
+
+CREATE PROCEDURE sp_secure_user_login(
+    IN p_username VARCHAR(50)
+)
+BEGIN
+    -- Kullanıcı bilgilerini guvenli sekilde getir
+    -- Prepared statement benzeri çalışır, SQL injection riski minimal
+    SELECT 
+        id,
+        fullname,
+        username,
+        email,
+        password,
+        role,
+        created_at
+    FROM users
+    WHERE username = p_username
+    LIMIT 1;
+END$$
+
+DELIMITER ;
+
+-- Procedure: Kullanıcı Kaydı - Güvenli Kayıt İşlemi
+DELIMITER $$
+
+CREATE PROCEDURE sp_create_user(
+    IN p_fullname VARCHAR(100),
+    IN p_username VARCHAR(50),
+    IN p_email VARCHAR(100),
+    IN p_password VARCHAR(255),
+    IN p_role VARCHAR(50)
+)
+BEGIN
+    -- Önce aynı kullanıcı veya email var mı kontrol et
+    DECLARE user_exists INT DEFAULT 0;
+    
+    SELECT COUNT(*) INTO user_exists
+    FROM users
+    WHERE username = p_username OR email = p_email;
+    
+    -- Yoksa ekle, varsa hata döndür
+    IF user_exists = 0 THEN
+        INSERT INTO users (fullname, username, email, password, role, created_at)
+        VALUES (p_fullname, p_username, p_email, p_password, p_role, NOW());
+        
+        SELECT LAST_INSERT_ID() as new_user_id, 'SUCCESS' as status;
+    ELSE
+        SELECT 0 as new_user_id, 'USER_EXISTS' as status;
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- Procedure: Haber Ekleme - SQL Injection Korumalı
+DELIMITER $$
+
+CREATE PROCEDURE sp_create_haber(
+    IN p_kategori VARCHAR(50),
+    IN p_baslik VARCHAR(255),
+    IN p_icerik TEXT,
+    IN p_resim VARCHAR(255),
+    IN p_editor_id INT,
+    IN p_editor_adi VARCHAR(100)
+)
+BEGIN
+    -- Haber ekle ve ID'sini döndür
+    INSERT INTO haberler (kategori, baslik, icerik, resim, editor_id, editor_adi, created_at, tarih)
+    VALUES (p_kategori, p_baslik, p_icerik, p_resim, p_editor_id, p_editor_adi, NOW(), NOW());
+    
+    SELECT LAST_INSERT_ID() as new_haber_id, 'SUCCESS' as status;
+END$$
+
+DELIMITER ;
+
+-- Procedure: Haber Güncelleme
+DELIMITER $$
+
+CREATE PROCEDURE sp_update_haber(
+    IN p_id INT,
+    IN p_kategori VARCHAR(50),
+    IN p_baslik VARCHAR(255),
+    IN p_icerik TEXT,
+    IN p_resim VARCHAR(255)
+)
+BEGIN
+    UPDATE haberler
+    SET 
+        kategori = p_kategori,
+        baslik = p_baslik,
+        icerik = p_icerik,
+        resim = p_resim
+    WHERE id = p_id;
+    
+    SELECT ROW_COUNT() as affected_rows, 'SUCCESS' as status;
+END$$
+
+DELIMITER ;
+
+-- Procedure: Kullanıcı Rol Güncelleme
+DELIMITER $$
+
+CREATE PROCEDURE sp_update_user_role(
+    IN p_user_id INT,
+    IN p_new_role VARCHAR(50)
+)
+BEGIN
+    -- Sadece geçerli roller: admin, editor, user, kullanıcı
+    IF p_new_role IN ('admin', 'editor', 'user', 'kullanıcı') THEN
+        UPDATE users
+        SET role = p_new_role
+        WHERE id = p_user_id;
+        
+        SELECT ROW_COUNT() as affected_rows, 'SUCCESS' as status;
+    ELSE
+        SELECT 0 as affected_rows, 'INVALID_ROLE' as status;
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- ------------------------------------------------------------------------
+-- VIEWS - Güvenli Veri Görüntüleme
+-- Hassas bilgileri gizler, sadece gerekli alanları gösterir
+-- ------------------------------------------------------------------------
+
+-- View: Haber Listesi - Şifre ve hassas bilgiler hariç
+CREATE OR REPLACE VIEW v_haber_listesi AS
+SELECT 
+    h.id,
+    h.kategori,
+    h.baslik,
+    h.icerik,
+    h.resim,
+    h.created_at,
+    h.tarih,
+    COALESCE(u.fullname, h.editor_adi, 'Admin') as editor_adi,
+    h.editor_id
+FROM haberler h
+LEFT JOIN users u ON h.editor_id = u.id
+ORDER BY h.created_at DESC;
+
+-- View: Kullanıcı Listesi - Şifre gizli
+CREATE OR REPLACE VIEW v_kullanici_listesi AS
+SELECT 
+    id,
+    fullname,
+    username,
+    email,
+    role,
+    created_at
+FROM users
+ORDER BY created_at DESC;
+
+-- View: Kategori İstatistikleri
+CREATE OR REPLACE VIEW v_kategori_istatistik AS
+SELECT 
+    k.id,
+    k.kategori_adi,
+    COUNT(h.id) as haber_sayisi,
+    MAX(h.created_at) as son_haber_tarihi
+FROM kategoriler k
+LEFT JOIN haberler h ON k.kategori_adi = h.kategori
+GROUP BY k.id, k.kategori_adi
+ORDER BY haber_sayisi DESC;
+
+-- View: Editor İstatistikleri
+CREATE OR REPLACE VIEW v_editor_istatistik AS
+SELECT 
+    u.id,
+    u.fullname,
+    u.username,
+    COUNT(h.id) as toplam_haber,
+    MAX(h.created_at) as son_haber_tarihi
+FROM users u
+LEFT JOIN haberler h ON u.id = h.editor_id
+WHERE u.role IN ('editor', 'admin')
+GROUP BY u.id, u.fullname, u.username
+ORDER BY toplam_haber DESC;
+
+-- View: Son Haberler - En son 50 haber
+CREATE OR REPLACE VIEW v_son_haberler AS
+SELECT 
+    h.id,
+    h.kategori,
+    h.baslik,
+    LEFT(h.icerik, 200) as ozet,  -- İlk 200 karakter
+    h.resim,
+    h.created_at,
+    COALESCE(u.fullname, h.editor_adi, 'Admin') as editor_adi
+FROM haberler h
+LEFT JOIN users u ON h.editor_id = u.id
+ORDER BY h.created_at DESC
+LIMIT 50;
+
+-- ------------------------------------------------------------------------
+-- FUNCTIONS - Yardımcı Fonksiyonlar
+-- Tekrar eden işlemleri fonksiyon haline getirir
+-- ------------------------------------------------------------------------
+
+-- Function: Email Format Kontrolü
+DELIMITER $$
+
+CREATE FUNCTION fn_validate_email(p_email VARCHAR(100))
+RETURNS BOOLEAN
+DETERMINISTIC
+BEGIN
+    -- Basit email format kontrolü
+    IF p_email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$' THEN
+        RETURN TRUE;
+    ELSE
+        RETURN FALSE;
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- Function: Kullanıcı Haber Sayısı
+DELIMITER $$
+
+CREATE FUNCTION fn_get_user_haber_count(p_user_id INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE haber_count INT DEFAULT 0;
+    
+    SELECT COUNT(*) INTO haber_count
+    FROM haberler
+    WHERE editor_id = p_user_id;
+    
+    RETURN haber_count;
+END$$
+
+DELIMITER ;
+
+-- Function: Kategori Haber Sayısı
+DELIMITER $$
+
+CREATE FUNCTION fn_get_kategori_haber_count(p_kategori VARCHAR(50))
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE haber_count INT DEFAULT 0;
+    
+    SELECT COUNT(*) INTO haber_count
+    FROM haberler
+    WHERE kategori = p_kategori;
+    
+    RETURN haber_count;
+END$$
+
+DELIMITER ;
+
+-- ------------------------------------------------------------------------
+-- TRIGGERS - Otomatik İşlemler
+-- Veri bütünlüğünü korur ve otomatik güncellemeler yapar
+-- ------------------------------------------------------------------------
+
+-- Trigger: Haber silindiğinde log tut
+DELIMITER $$
+
+CREATE TRIGGER tr_haber_delete_log
+BEFORE DELETE ON haberler
+FOR EACH ROW
+BEGIN
+    -- Silinen haberi logla (audit table olursa kullanılabilir)
+    -- Şimdilik sadece örnek
+    SET @deleted_haber_id = OLD.id;
+    SET @deleted_haber_baslik = OLD.baslik;
+END$$
+
+DELIMITER ;
+
+-- Trigger: Kullanıcı silindiğinde haberlerini güncelle
+DELIMITER $$
+
+CREATE TRIGGER tr_user_delete_update_haberler
+BEFORE DELETE ON users
+FOR EACH ROW
+BEGIN
+    -- Kullanıcı silindiğinde haberlerinin editor_id'sini NULL yap
+    UPDATE haberler
+    SET editor_id = NULL,
+        editor_adi = OLD.fullname
+    WHERE editor_id = OLD.id;
+END$$
+
+DELIMITER ;
+
+-- ------------------------------------------------------------------------
+-- GÜVENLİK TAVSİYELERİ VE NOTLAR
+-- ------------------------------------------------------------------------
+
+-- KULLANIM ÖRNEKLERİ:
+-- 
+-- 1. Güvenli Login:
+--    CALL sp_secure_user_login('username');
+--
+-- 2. Kullanıcı Oluşturma:
+--    CALL sp_create_user('Ad Soyad', 'username', 'email@test.com', 'hashed_password', 'user');
+--
+-- 3. Haber Ekleme:
+--    CALL sp_create_haber('Teknoloji', 'Başlık', 'İçerik', 'resim.jpg', 1, 'Editor Adı');
+--
+-- 4. View Kullanımı:
+--    SELECT * FROM v_haber_listesi WHERE kategori = 'Teknoloji';
+--
+-- 5. Function Kullanımı:
+--    SELECT fn_validate_email('test@example.com');
+--
+
+-- ÖNEMLİ GÜVENLİK UYARILARI:
+-- 
+-- 1. PHP tarafında MUTLAKA prepared statements kullanın
+-- 2. Stored procedure'leri tercih edin (ek güvenlik katmanı)
+-- 3. User input'ları ASLA doğrudan SQL'e eklemeyın
+-- 4. Password'ları ASLA düz metin olarak saklamayın (password_hash kullanın)
+-- 5. Production'da hassas hata mesajları göstermeyin
+-- 6. Regular olarak backup alın
+-- 7. Database user'ına minimum yetki verin (least privilege)
+-- 8. SSL/TLS ile database bağlantılarını şifreleyin
+--
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
