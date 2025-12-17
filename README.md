@@ -24,7 +24,7 @@ Bu proje **Bartın(Bartın MYO) Üniversitesi - İnternet Tabanlı Programlama (
 |-------------|------------|-----|-------|
 | **Kerem Cem Yüksel** | **240155221062** | Full-Stack Developer & Security Lead | Backend, Security, Database |
 | **Efekan Nefesoğlu** | **24115221004** | Full-Stack Developer  | Frontend,Backend, Design, Testing,Database|
-| **Berkan Karaman**   | **24115211033** | Full-Stack Developer | Tester|
+| **Berkan Karaman**   | **24015221033 ** | Full-Stack Developer | Tester|
 ---
 **Hoca:** Dr. Öğr. Serkan Aksu  - İnternet Tabanlı Programlama Dersi  
 **Dönem:** 2025-2026 Güz Dönemi  
